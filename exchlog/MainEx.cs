@@ -23,7 +23,9 @@ namespace exchlog
         public void wrLogU(string message) {
             using (StreamWriter wrLog = File.AppendText("d:\\temp\\exchlog.txt"))
             {
-                wrLog.WriteLine(message);
+                DateTime time = DateTime.Now;
+                
+                wrLog.WriteLine(time.ToString("u") +": "+ message);
                 wrLog.Close();
             }
         }
