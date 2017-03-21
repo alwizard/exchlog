@@ -19,16 +19,18 @@ namespace exchlog
         private IniFile getConfig;
         //public StreamWriter wrLog;
 
-        public void wrLogU(string message) {
+        public void wrLogU(string message)
+        {
             using (StreamWriter wrLog = File.AppendText(fileLog))
             {
                 DateTime time = DateTime.Now;
-                
-                wrLog.WriteLine(time.ToString("yyyy-MM-dd HH:mm:ss") +": "+ message);
+
+                wrLog.WriteLine(time.ToString("yyyy-MM-dd HH:mm:ss") + ": " + message);
                 wrLog.Close();
             }
         }
-        public MainEx() {
+        public MainEx()
+        {
             //wrLog = File.AppendText(fLog);
             getConfig = new IniFile();
             fileLog = getConfig.getCurrPath() + getConfig.IniReadValue("SETTINGS", "LOGFILE");
@@ -46,9 +48,9 @@ namespace exchlog
             fw.Changed += new FileSystemEventHandler(onChange);
             fw.EnableRaisingEvents = true;
             wrLogU("Enable: Enable FileSystemWatcher");
-        //}catch(EventHandler e){
+            //}catch(EventHandler e){
 
-        //}
+            //}
         }
 
         private void onChange(object source, FileSystemEventArgs e)
@@ -74,9 +76,9 @@ namespace exchlog
 
         public void execExport()
         {
-            
-                logInDB(pFile);
-           
+
+            logInDB(pFile);
+
         }
 
         public string ParseDate(string fName)
@@ -93,7 +95,7 @@ namespace exchlog
             fName = "RECV" + dtFile.ToString("yyyyMMddHH", CultureInfo.InvariantCulture) + "-1.log";
             //FilesDate.Add(tmpDT);
             //ConvDateString.Add(FilesDate[i].ToString("u"));
-            
+
             wrLogU(oldName + " => " + fName);
             //sw.Close();
             return fName;
@@ -131,18 +133,44 @@ namespace exchlog
             string dbServer = getConfig.IniReadValue("SETTINGS", "DBSERVER");
             string dbName = getConfig.IniReadValue("SETTINGS", "DBNAME");
             string dbTable = getConfig.IniReadValue("SETTINGS", "DBTABLE");
-            wrLogU("SETTINGS: ReadDBSettings => " + dbServer +", "+ dbName +" , "+ dbTable);
-            SqlConnection conn = new SqlConnection("Data Source="+dbServer+";Initial Catalog="+dbName+ ";User ID=exchlog;Password=sRlJIl9beFx1;Persist Security Info=False");
+            wrLogU("SETTINGS: ReadDBSettings => " + dbServer + ", " + dbName + " , " + dbTable);
+            SqlConnection conn = null;
+            try
+            {
+                conn = new SqlConnection("Data Source=" + dbServer + ";Initial Catalog=" + dbName + ";User ID=exchlog;Password=sRlJIl9beFx1;Persist Security Info=False");
+                //Data Source=srv16-sql;Initial Catalog=MyDB;User ID=exchlog
+
+            }
+            catch (SqlException e)
+            {
+
+                wrLogU("ERROR: ConnectToSQL => " + e.Message);
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Open();
+                    wrLogU("SQL Connection: open;");
+                    using (var sqlBulk = new SqlBulkCopy(conn))
+                    {
+                        sqlBulk.DestinationTableName = dbTable;
+                        sqlBulk.WriteToServer(dt);
+                    }
+                    conn.Close();
+                }
+                else
+                {
+                    wrLogU("ERROR: No connection to SQL;");
+                }
+
+
+            }
+
+            //conn = new SqlConnection("Data Source="+dbServer+";Initial Catalog="+dbName+ ";User ID=exchlog;Password=sRlJIl9beFx1;Persist Security Info=False");
             //Data Source=srv16-sql;Initial Catalog=MyDB;User ID=exchlog
 
-            conn.Open();
-            wrLogU("SQL Connection: open;");
-            using (var sqlBulk = new SqlBulkCopy(conn))
-            {
-                sqlBulk.DestinationTableName = dbTable;
-                sqlBulk.WriteToServer(dt);
-            }
-            conn.Close();
+
         }
 
         string parseStr(string str)
@@ -178,7 +206,7 @@ namespace exchlog
             Array.Reverse(buffFile);
             Array.Resize(ref buffFile, buffFile.Length - 5);
             Array.Reverse(buffFile);
-            
+
 
             string[,] str = new string[buffFile.Length, 9];
             int i = 0;
