@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Security.Permissions;
-using System.Text;
+
 using System.Threading;
-using System.Threading.Tasks;
+
 
 namespace exchlog
 {
@@ -17,20 +15,24 @@ namespace exchlog
         private String path = "C:\\Program Files\\Microsoft\\Exchange Server\\V15\\TransportRoles\\Logs\\FrontEnd\\ProtocolLog\\SmtpReceive\\";
         private Thread exec;
         private string pFile;
-        private string fLog = "d:\\temp\\exchsql.log";
+        private string fileLog;// = "d:\\temp\\exchsql.log";
+        private IniFile getConfig;
         //public StreamWriter wrLog;
 
         public void wrLogU(string message) {
-            using (StreamWriter wrLog = File.AppendText("d:\\temp\\exchlog.txt"))
+            using (StreamWriter wrLog = File.AppendText(fileLog))
             {
                 DateTime time = DateTime.Now;
                 
-                wrLog.WriteLine(time.ToString("u") +": "+ message);
+                wrLog.WriteLine(time.ToString("yyyy-MM-dd HH:mm:ss") +": "+ message);
                 wrLog.Close();
             }
         }
         public MainEx() {
             //wrLog = File.AppendText(fLog);
+            getConfig = new IniFile();
+            fileLog = getConfig.getCurrPath() + getConfig.IniReadValue("SETTINGS", "LOGFILE");
+            wrLogU("SETTINGS: Read:" + fileLog);
         }
         [PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
         public void LogWatcher()
@@ -43,6 +45,7 @@ namespace exchlog
 
             fw.Changed += new FileSystemEventHandler(onChange);
             fw.EnableRaisingEvents = true;
+            wrLogU("Enable: Enable FileSystemWatcher");
         //}catch(EventHandler e){
 
         //}
@@ -125,13 +128,18 @@ namespace exchlog
                 //rows[9] = strrows[i, 9];
                 dt.Rows.Add(rows);
             }
-            SqlConnection conn = new SqlConnection("Data Source=srv16-sql;Initial Catalog=MyDB;Integrated Security=True");
+            string dbServer = getConfig.IniReadValue("SETTINGS", "DBSERVER");
+            string dbName = getConfig.IniReadValue("SETTINGS", "DBNAME");
+            string dbTable = getConfig.IniReadValue("SETTINGS", "DBTABLE");
+            wrLogU("SETTINGS: ReadDBSettings => " + dbServer +", "+ dbName +" , "+ dbTable);
+            SqlConnection conn = new SqlConnection("Data Source="+dbServer+";Initial Catalog="+dbName+ ";User ID=exchlog;Password=sRlJIl9beFx1;Persist Security Info=False");
+            //Data Source=srv16-sql;Initial Catalog=MyDB;User ID=exchlog
 
             conn.Open();
             wrLogU("SQL Connection: open;");
             using (var sqlBulk = new SqlBulkCopy(conn))
             {
-                sqlBulk.DestinationTableName = "receive_smtp";
+                sqlBulk.DestinationTableName = dbTable;
                 sqlBulk.WriteToServer(dt);
             }
             conn.Close();
@@ -205,4 +213,5 @@ namespace exchlog
         }
 
     }
+    // exchlog sRlJIl9beFx1
 }

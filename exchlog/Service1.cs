@@ -16,13 +16,7 @@ namespace exchlog
         public Service1()
         {
             InitializeComponent();
-            if (!System.Diagnostics.EventLog.SourceExists("MySource"))
-            {
-                System.Diagnostics.EventLog.CreateEventSource(
-                    "MySource", "MyNewLog");
-            }
-            eventLog1.Source = "MySource";
-            eventLog1.Log = "MyNewLog";
+            
         }
 
         protected override void OnStart(string[] args)
@@ -30,13 +24,13 @@ namespace exchlog
             //eventLog1.WriteEntry("In OnStart");
             MainEx execlog = new MainEx();
             //StreamWriter wrLog = File.AppendText("d:\\temp\\startserv.log");
-            execlog.wrLogU("OnStart: Service;");
+            execlog.wrLogU("Service: OnStart;");
             execlog.LogWatcher();
         }
 
         protected override void OnStop()
         {
-            
+            ///execlog.wrLogU("Service: OnStop;");
         }
     }
 }
