@@ -130,6 +130,7 @@ namespace exchlog
                 //rows[9] = strrows[i, 9];
                 dt.Rows.Add(rows);
             }
+            
             string dbServer = getConfig.IniReadValue("SETTINGS", "DBSERVER");
             string dbName = getConfig.IniReadValue("SETTINGS", "DBNAME");
             string dbTable = getConfig.IniReadValue("SETTINGS", "DBTABLE");
@@ -158,6 +159,8 @@ namespace exchlog
                         sqlBulk.WriteToServer(dt);
                     }
                     conn.Close();
+                    wrLogU("SQL:  Inserting " + dt.Rows.Count.ToString());
+                    wrLogU("SQL Connection: closed;");
                 }
                 else
                 {
